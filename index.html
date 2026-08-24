@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>尾熊 Spelling Adventure</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff8ef;color:#2d2a26;margin:0;padding:18px}
+.app{max-width:720px;margin:auto}
+.card{background:#fff;border-radius:20px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+h1{margin-top:0}
+button{font-size:18px;font-weight:700;border:0;border-radius:14px;padding:12px 16px;margin:6px;background:#ff9f68;color:white}
+.choice{display:block;width:100%;background:#fff1e6;color:#2d2a26;border:2px solid #eadfd5}
+#feedback{font-weight:800;font-size:18px;margin-top:12px}
+audio{width:100%;margin:12px 0}
+.small{color:#777}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="card">
+<h1>🐨 尾熊的 Spelling Adventure</h1>
+<p class="small">這個版本直接讀取資料夾裡的 MP3 音檔。</p>
+<div id="counter"></div>
+<audio id="player" controls preload="auto"></audio>
+<div>
+<button onclick="playWord()">🔊 播放單字</button>
+<button onclick="playSlow()">🐢 慢速播放</button>
+</div>
+<div id="choices"></div>
+<div id="feedback"></div>
+<button id="next" onclick="nextQ()" style="display:none">下一題 →</button>
+</div>
+</div>
+<script>
+const words = ["tantrum", "pilgrim", "inflict", "address", "flipflop", "untwist", "hundred", "kindred", "acquit", "distress", "pumpkin", "muskrat", "anklet", "abstract", "complex"];
+let order=[...words].sort(()=>Math.random()-.5), i=0;
+const player=document.getElementById('player');
+function current(){return order[i]}
+function load(){
+ document.getElementById('counter').textContent=`第 ${i+1} / ${words.length} 題`;
+ player.src='audio/'+current()+'.mp3';
+ document.getElementById('feedback').textContent='';
+ document.getElementById('next').style.display='none';
+ const others=words.filter(x=>x!==current()).sort(()=>Math.random()-.5).slice(0,3);
+ const opts=[current(),...others].sort(()=>Math.random()-.5);
+ const box=document.getElementById('choices'); box.innerHTML='';
+ opts.forEach(o=>{
+   const b=document.createElement('button'); b.className='choice'; b.textContent=o;
+   b.onclick=()=>{
+      document.getElementById('feedback').textContent=(o===current())?'答對了！👏':'再試一次～';
+      if(o===current()) document.getElementById('next').style.display='inline-block';
+   };
+   box.appendChild(b);
+ });
+}
+function playWord(){ player.playbackRate=1; player.currentTime=0; player.play(); }
+function playSlow(){ player.playbackRate=.82; player.currentTime=0; player.play(); }
+function nextQ(){ i=(i+1)%words.length; load(); }
+load();
+</script>
+</body>
+</html>
