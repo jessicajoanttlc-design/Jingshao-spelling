@@ -31,10 +31,10 @@ input{width:100%;font-size:29px;padding:13px;border:2px solid var(--line);border
 </head>
 <body>
 <div class="app">
-<div class="hero"><h1>🐨 尾熊 Spelling Adventure</h1><p>每天只練 5 個字</p></div>
+<div class="hero"><h1>🐨 尾熊 Spelling Adventure</h1><p>Practice only 5 words a day</p></div>
 
 <div id="home" class="card">
-  <div class="center"><h2>今天是哪一天？</h2><p class="hint">每次只會出現 5 個單字，不會一次跑 15 個。</p></div>
+  <div class="center"><h2>Which day are you practicing?</h2><p class="hint">Only 5 words will appear each day — never all 15 at once.</p></div>
   <div id="days" class="days"></div>
 </div>
 
@@ -60,26 +60,26 @@ input{width:100%;font-size:29px;padding:13px;border:2px solid var(--line);border
     <div class="built" id="built">_ · _</div>
     <div class="parts" id="parts"></div>
     <div class="controls">
-      <button class="secondary" onclick="clearBuilt()">↩️ 重來</button>
-      <button class="green" onclick="checkBuild()">✅ 檢查</button>
+      <button class="secondary" onclick="clearBuilt()">↩️ Reset</button>
+      <button class="green" onclick="checkBuild()">✅ Check</button>
     </div>
   </div>
 
   <div id="stepSpell" class="hidden">
-    <input id="spellInput" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="type the word">
+    <input id="spellInput" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Type the word">
     <div class="controls"><button class="green" onclick="checkSpell()">✅ Check</button><button class="secondary" onclick="showHint()">✂️ Hint</button></div>
   </div>
 
   <div id="feedback" class="feedback"></div>
-  <div class="controls"><button id="nextBtn" class="blue hidden" onclick="nextWord()">下一個單字 →</button></div>
+  <div class="controls"><button id="nextBtn" class="blue hidden" onclick="nextWord()">下一個Word →</button></div>
 </div>
 
 <div id="finish" class="card hidden">
   <div class="center">
     <div style="font-size:64px">🎉</div>
-    <h2>今天 5 個字完成！</h2>
+    <h2>Today's 5 words are complete!</h2>
     <p id="finishText"></p>
-    <div class="controls"><button onclick="goHome()">🏠 回首頁</button></div>
+    <div class="controls"><button onclick="goHome()">🏠 Home</button></div>
   </div>
 </div>
 </div>
@@ -87,16 +87,16 @@ input{width:100%;font-size:29px;padding:13px;border:2px solid var(--line);border
 <script>
 const WORDS=[{"w": "tantrum", "parts": ["tan", "trum"]}, {"w": "pilgrim", "parts": ["pil", "grim"]}, {"w": "inflict", "parts": ["in", "flict"]}, {"w": "address", "parts": ["ad", "dress"]}, {"w": "flipflop", "parts": ["flip", "flop"]}, {"w": "untwist", "parts": ["un", "twist"]}, {"w": "hundred", "parts": ["hun", "dred"]}, {"w": "kindred", "parts": ["kin", "dred"]}, {"w": "acquit", "parts": ["ac", "quit"]}, {"w": "distress", "parts": ["dis", "tress"]}, {"w": "pumpkin", "parts": ["pump", "kin"]}, {"w": "muskrat", "parts": ["musk", "rat"]}, {"w": "anklet", "parts": ["ank", "let"]}, {"w": "abstract", "parts": ["ab", "stract"]}, {"w": "complex", "parts": ["com", "plex"]}];
 const DAYS=[
- {name:"Day 1", note:"前 5 個字", items:WORDS.slice(0,5)},
- {name:"Day 2", note:"第 6–10 個字", items:WORDS.slice(5,10)},
- {name:"Day 3", note:"第 11–15 個字", items:WORDS.slice(10,15)}
+ {name:"Day 1", note:"Words 1–5", items:WORDS.slice(0,5)},
+ {name:"Day 2", note:"Words 6–10", items:WORDS.slice(5,10)},
+ {name:"Day 3", note:"Words 11–15", items:WORDS.slice(10,15)}
 ];
 let wrong=JSON.parse(localStorage.getItem("jingshaoWrongCount")||"{}");
 function reviewFive(){
  return [...WORDS].sort((a,b)=>(wrong[b.w]||0)-(wrong[a.w]||0)).slice(0,5);
 }
-DAYS.push({name:"Day 4",note:"自動挑最需要複習的 5 個",items:null});
-DAYS.push({name:"Day 5",note:"考前再練最需要加強的 5 個",items:null});
+DAYS.push({name:"Day 4",note:"Automatically picks the 5 words that need the most review",items:null});
+DAYS.push({name:"Day 5",note:"Final review of the 5 words that need the most practice",items:null});
 
 let session=[],pos=0,step=1,built=[],dayName="";
 const $=id=>document.getElementById(id), shuffle=a=>[...a].sort(()=>Math.random()-.5), current=()=>session[pos];
@@ -122,10 +122,10 @@ function playWord(rate=1){
 }
 function renderWord(){
  built=[];$("feedback").textContent="";$("nextBtn").classList.add("hidden");
- $("dayPill").textContent=dayName;$("countPill").textContent=`單字 ${pos+1} / 5`;
+ $("dayPill").textContent=dayName;$("countPill").textContent=`Word ${pos+1} / 5`;
  $("bar").style.width=`${pos/5*100}%`;
  $("stepChoose").classList.remove("hidden");$("stepBuild").classList.add("hidden");$("stepSpell").classList.add("hidden");
- $("wordTitle").textContent="🔊";$("instruction").textContent="① 先聽：選出你聽到的單字";
+ $("wordTitle").textContent="🔊";$("instruction").textContent="① Listen: Choose the word you hear";
  renderChoose();setTimeout(()=>playWord(1),250);
 }
 function addWrong(){wrong[current().w]=(wrong[current().w]||0)+1;localStorage.setItem("jingshaoWrongCount",JSON.stringify(wrong));}
@@ -135,14 +135,14 @@ function renderChoose(){
  const opts=shuffle([target,...others]);const box=$("stepChoose");box.innerHTML="";
  opts.forEach(o=>{const b=document.createElement("button");b.className="choice";b.textContent=o;b.onclick=()=>{
    [...box.children].forEach(x=>x.disabled=true);
-   if(o!==target){addWrong();$("feedback").textContent=`正確是 ${target}`;$("feedback").className="feedback bad";}
-   else{$("feedback").textContent="對！接著把它拆開 🧩";$("feedback").className="feedback ok";}
+   if(o!==target){addWrong();$("feedback").textContent=`The correct answer is ${target}`;$("feedback").className="feedback bad";}
+   else{$("feedback").textContent="Correct! Now build the word 🧩";$("feedback").className="feedback ok";}
    setTimeout(renderBuild,550);
  };box.appendChild(b);});
 }
 function renderBuild(){
  step=2;$("stepChoose").classList.add("hidden");$("stepBuild").classList.remove("hidden");
- $("instruction").textContent="② 再拆：把兩個音節照順序點出來";$("feedback").textContent="";$("built").textContent="_ · _";built=[];
+ $("instruction").textContent="② Build: Tap the two syllables in the correct order";$("feedback").textContent="";$("built").textContent="_ · _";built=[];
  let distract=[];WORDS.filter(x=>x.w!==current().w).forEach(x=>distract.push(...x.parts));
  let opts=shuffle([...current().parts,...shuffle(distract).slice(0,2)]);
  const box=$("parts");box.innerHTML="";
@@ -153,20 +153,20 @@ function checkBuild(){
  if(built.length<2)return;
  const ok=built[0]===current().parts[0]&&built[1]===current().parts[1];
  if(!ok)addWrong();
- $("feedback").textContent=ok?"很好！最後自己拼一次 ✏️":`答案是 ${current().parts.join(" · ")}`;
+ $("feedback").textContent=ok?"Great! Now spell it by yourself ✏️":`The answer is ${current().parts.join(" · ")}`;
  $("feedback").className="feedback "+(ok?"ok":"bad");
  setTimeout(renderSpell,650);
 }
 function renderSpell(){
  step=3;$("stepBuild").classList.add("hidden");$("stepSpell").classList.remove("hidden");
- $("instruction").textContent="③ 最後拼：只看耳朵記得的聲音，拼完整單字";$("feedback").textContent="";
+ $("instruction").textContent="③ Spell: Use only what you hear and spell the whole word";$("feedback").textContent="";
  $("spellInput").value="";$("spellInput").focus();
 }
-function showHint(){$("instruction").textContent=`提示：${current().parts.join(" · ")}`;addWrong();}
+function showHint(){$("instruction").textContent=`Hint: ${current().parts.join(" · ")}`;addWrong();}
 function checkSpell(){
  const v=$("spellInput").value.trim().toLowerCase();if(!v)return;
- if(v===current().w){$("feedback").textContent="這個字完成！⭐";$("feedback").className="feedback ok";}
- else{addWrong();$("feedback").textContent=`正確是 ${current().w}`;$("feedback").className="feedback bad";}
+ if(v===current().w){$("feedback").textContent="Word complete! ⭐";$("feedback").className="feedback ok";}
+ else{addWrong();$("feedback").textContent=`The correct answer is ${current().w}`;$("feedback").className="feedback bad";}
  $("nextBtn").classList.remove("hidden");
 }
 function nextWord(){
@@ -176,7 +176,7 @@ function nextWord(){
 }
 function finish(){
  $("game").classList.add("hidden");$("finish").classList.remove("hidden");
- $("finishText").textContent=`${dayName} 完成。今天只練了這 5 個單字。`;
+ $("finishText").textContent=`${dayName}  complete. You practiced only these 5 words today.`;
  localStorage.setItem("jingshaoWrongCount",JSON.stringify(wrong));
 }
 function goHome(){$("finish").classList.add("hidden");$("home").classList.remove("hidden");makeHome();}
