@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>尾熊 Spelling Adventure</title>
+<style>
+:root{--bg:#fff8ef;--card:#fff;--ink:#302a27;--muted:#7e756d;--orange:#ff9661;--green:#4fa46d;--red:#d45d5d;--blue:#72a7ef;--line:#eadfd5}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:linear-gradient(#fff5e9,#fffdf9);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+.app{max-width:760px;margin:auto;padding:16px 12px 36px}
+.hero{text-align:center}.hero h1{margin:3px 0;font-size:30px}.hero p{margin:4px 0 15px;color:var(--muted)}
+.card{background:var(--card);border-radius:24px;padding:20px;box-shadow:0 8px 26px rgba(80,55,35,.09);margin-bottom:14px}
+.days{display:grid;grid-template-columns:1fr;gap:10px}
+.day{background:#fff7f0;color:var(--ink);border:2px solid var(--line);padding:16px;text-align:left}
+.day strong{font-size:21px;display:block}.day small{display:block;color:var(--muted);margin-top:4px}
+.top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.pill{background:#fff0e5;padding:8px 12px;border-radius:999px;font-weight:800}
+.progress{height:12px;background:#eee6df;border-radius:999px;overflow:hidden;margin:14px 0}.bar{height:100%;background:var(--orange);width:0}
+.center{text-align:center}.big{font-size:38px;font-weight:900;min-height:52px;margin:10px}.hint{color:var(--muted);min-height:26px}
+.controls{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin:13px 0}
+button{border:0;border-radius:15px;padding:12px 15px;font-size:17px;font-weight:800;background:var(--orange);color:white}
+button.secondary{background:#f3ece6;color:var(--ink)}button.green{background:var(--green)}button.blue{background:var(--blue)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.choice{background:#fff9f4;color:var(--ink);border:2px solid var(--line);min-height:56px;font-size:19px}
+.parts{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}.part{background:#eef4ff;color:#334a70;border:2px solid #d8e5ff;min-width:110px;font-size:21px}
+.built{font-size:28px;font-weight:900;text-align:center;min-height:42px}
+input{width:100%;font-size:29px;padding:13px;border:2px solid var(--line);border-radius:16px;text-align:center;outline:none}
+.feedback{text-align:center;font-size:18px;font-weight:850;min-height:28px;margin-top:8px}.ok{color:var(--green)}.bad{color:var(--red)}
+.hidden{display:none!important}.tiny{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="hero"><h1>🐨 尾熊 Spelling Adventure</h1><p>Practice only 5 words a day</p></div>
+
+<div id="home" class="card">
+  <div class="center"><h2>Which day are you practicing?</h2><p class="hint">Only 5 words will appear each day — never all 15 at once.</p></div>
+  <div id="days" class="days"></div>
+</div>
+
+<div id="game" class="card hidden">
+  <div class="top">
+    <div class="pill" id="dayPill"></div>
+    <div class="pill" id="countPill"></div>
+  </div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <div class="center">
+    <div class="big" id="wordTitle">🔊</div>
+    <div class="hint" id="instruction"></div>
+  </div>
+  <div class="controls">
+    <button onclick="playWord(1)">🔊 Play</button>
+    <button class="secondary" onclick="playWord(.82)">🐢 Slow</button>
+  </div>
+  <audio id="player" preload="auto"></audio>
+
+  <div id="stepChoose" class="grid"></div>
+
+  <div id="stepBuild" class="hidden">
+    <div class="built" id="built">_ · _</div>
+    <div class="parts" id="parts"></div>
+    <div class="controls">
+      <button class="secondary" onclick="clearBuilt()">↩️ Reset</button>
+      <button class="green" onclick="checkBuild()">✅ Check</button>
+    </div>
+  </div>
+
+  <div id="stepSpell" class="hidden">
+    <input id="spellInput" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Type the word">
+    <div class="controls"><button class="green" onclick="checkSpell()">✅ Check</button><button class="secondary" onclick="showHint()">✂️ Hint</button></div>
+  </div>
+
+  <div id="feedback" class="feedback"></div>
+  <div class="controls"><button id="nextBtn" class="blue hidden" onclick="nextWord()">下一個Word →</button></div>
+</div>
+
+<div id="finish" class="card hidden">
+  <div class="center">
+    <div style="font-size:64px">🎉</div>
+    <h2>Today's 5 words are complete!</h2>
+    <p id="finishText"></p>
+    <div class="controls"><button onclick="goHome()">🏠 Home</button></div>
+  </div>
+</div>
+</div>
+
+<script>
+const WORDS=[{"w": "tantrum", "parts": ["tan", "trum"]}, {"w": "pilgrim", "parts": ["pil", "grim"]}, {"w": "inflict", "parts": ["in", "flict"]}, {"w": "address", "parts": ["ad", "dress"]}, {"w": "flipflop", "parts": ["flip", "flop"]}, {"w": "untwist", "parts": ["un", "twist"]}, {"w": "hundred", "parts": ["hun", "dred"]}, {"w": "kindred", "parts": ["kin", "dred"]}, {"w": "acquit", "parts": ["ac", "quit"]}, {"w": "distress", "parts": ["dis", "tress"]}, {"w": "pumpkin", "parts": ["pump", "kin"]}, {"w": "muskrat", "parts": ["musk", "rat"]}, {"w": "anklet", "parts": ["ank", "let"]}, {"w": "abstract", "parts": ["ab", "stract"]}, {"w": "complex", "parts": ["com", "plex"]}];
+const DAYS=[
+ {name:"Day 1", note:"Words 1–5", items:WORDS.slice(0,5)},
+ {name:"Day 2", note:"Words 6–10", items:WORDS.slice(5,10)},
+ {name:"Day 3", note:"Words 11–15", items:WORDS.slice(10,15)}
+];
+let wrong=JSON.parse(localStorage.getItem("jingshaoWrongCount")||"{}");
+function reviewFive(){
+ return [...WORDS].sort((a,b)=>(wrong[b.w]||0)-(wrong[a.w]||0)).slice(0,5);
+}
+DAYS.push({name:"Day 4",note:"Automatically picks the 5 words that need the most review",items:null});
+DAYS.push({name:"Day 5",note:"Final review of the 5 words that need the most practice",items:null});
+
+let session=[],pos=0,step=1,built=[],dayName="";
+const $=id=>document.getElementById(id), shuffle=a=>[...a].sort(()=>Math.random()-.5), current=()=>session[pos];
+
+function makeHome(){
+ const box=$("days");box.innerHTML="";
+ DAYS.forEach((d,i)=>{
+   const items=d.items||reviewFive();
+   const b=document.createElement("button");b.className="day";
+   b.innerHTML=`<strong>${d.name}</strong><small>${d.note}</small><small>${items.map(x=>x.w).join(" · ")}</small>`;
+   b.onclick=()=>startDay(i);box.appendChild(b);
+ });
+}
+function startDay(i){
+ dayName=DAYS[i].name;
+ session=shuffle(DAYS[i].items||reviewFive());
+ pos=0;step=1;
+ $("home").classList.add("hidden");$("finish").classList.add("hidden");$("game").classList.remove("hidden");
+ renderWord();
+}
+function playWord(rate=1){
+ const p=$("player");p.pause();p.src=`audio/${current().w}.mp3`;p.playbackRate=rate;p.currentTime=0;p.play().catch(()=>{});
+}
+function renderWord(){
+ built=[];$("feedback").textContent="";$("nextBtn").classList.add("hidden");
+ $("dayPill").textContent=dayName;$("countPill").textContent=`Word ${pos+1} / 5`;
+ $("bar").style.width=`${pos/5*100}%`;
+ $("stepChoose").classList.remove("hidden");$("stepBuild").classList.add("hidden");$("stepSpell").classList.add("hidden");
+ $("wordTitle").textContent="🔊";$("instruction").textContent="① Listen: Choose the word you hear";
+ renderChoose();setTimeout(()=>playWord(1),250);
+}
+function addWrong(){wrong[current().w]=(wrong[current().w]||0)+1;localStorage.setItem("jingshaoWrongCount",JSON.stringify(wrong));}
+function renderChoose(){
+ const target=current().w;
+ const others=shuffle(WORDS.filter(x=>x.w!==target)).slice(0,3).map(x=>x.w);
+ const opts=shuffle([target,...others]);const box=$("stepChoose");box.innerHTML="";
+ opts.forEach(o=>{const b=document.createElement("button");b.className="choice";b.textContent=o;b.onclick=()=>{
+   [...box.children].forEach(x=>x.disabled=true);
+   if(o!==target){addWrong();$("feedback").textContent=`The correct answer is ${target}`;$("feedback").className="feedback bad";}
+   else{$("feedback").textContent="Correct! Now build the word 🧩";$("feedback").className="feedback ok";}
+   setTimeout(renderBuild,550);
+ };box.appendChild(b);});
+}
+function renderBuild(){
+ step=2;$("stepChoose").classList.add("hidden");$("stepBuild").classList.remove("hidden");
+ $("instruction").textContent="② Build: Tap the two syllables in the correct order";$("feedback").textContent="";$("built").textContent="_ · _";built=[];
+ let distract=[];WORDS.filter(x=>x.w!==current().w).forEach(x=>distract.push(...x.parts));
+ let opts=shuffle([...current().parts,...shuffle(distract).slice(0,2)]);
+ const box=$("parts");box.innerHTML="";
+ opts.forEach(p=>{const b=document.createElement("button");b.className="part";b.textContent=p;b.onclick=()=>{if(built.length<2){built.push(p);$("built").textContent=built.join(" · ");}};box.appendChild(b);});
+}
+function clearBuilt(){built=[];$("built").textContent="_ · _";}
+function checkBuild(){
+ if(built.length<2)return;
+ const ok=built[0]===current().parts[0]&&built[1]===current().parts[1];
+ if(!ok)addWrong();
+ $("feedback").textContent=ok?"Great! Now spell it by yourself ✏️":`The answer is ${current().parts.join(" · ")}`;
+ $("feedback").className="feedback "+(ok?"ok":"bad");
+ setTimeout(renderSpell,650);
+}
+function renderSpell(){
+ step=3;$("stepBuild").classList.add("hidden");$("stepSpell").classList.remove("hidden");
+ $("instruction").textContent="③ Spell: Use only what you hear and spell the whole word";$("feedback").textContent="";
+ $("spellInput").value="";$("spellInput").focus();
+}
+function showHint(){$("instruction").textContent=`Hint: ${current().parts.join(" · ")}`;addWrong();}
+function checkSpell(){
+ const v=$("spellInput").value.trim().toLowerCase();if(!v)return;
+ if(v===current().w){$("feedback").textContent="Word complete! ⭐";$("feedback").className="feedback ok";}
+ else{addWrong();$("feedback").textContent=`The correct answer is ${current().w}`;$("feedback").className="feedback bad";}
+ $("nextBtn").classList.remove("hidden");
+}
+function nextWord(){
+ pos++;
+ if(pos>=5){finish();return;}
+ renderWord();
+}
+function finish(){
+ $("game").classList.add("hidden");$("finish").classList.remove("hidden");
+ $("finishText").textContent=`${dayName}  complete. You practiced only these 5 words today.`;
+ localStorage.setItem("jingshaoWrongCount",JSON.stringify(wrong));
+}
+function goHome(){$("finish").classList.add("hidden");$("home").classList.remove("hidden");makeHome();}
+$("spellInput").addEventListener("keydown",e=>{if(e.key==="Enter")checkSpell();});
+makeHome();
+</script>
+</body>
+</html>
